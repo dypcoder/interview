@@ -154,26 +154,31 @@ stop = true;
 下面看一个例子：
 
 ```
-public class Test {
+public class TestVolatile {
+
     public volatile int inc = 0;
 
     public void increase() {
         inc++;
     }
 
-    public static void main(String[] args) {
-        final Test test = new Test();
+    public static void main(String[] args) throws Exception {
+        final TestVolatile test = new TestVolatile();
+        final List<Thread> list = new ArrayList<>();
         for(int i=0;i<10;i++){
-            new Thread(){
-                public void run() {
-                    for(int j=0;j<1000;j++)
-                        test.increase();
-                };
-            }.start();
+            Thread thread = new Thread(() -> {
+                for (int j = 0; j < 1000; j++) {
+                    test.increase();
+                }
+
+            });
+            thread.start();
+            list.add(thread);
         }
 
-        while(Thread.activeCount()>1)  //保证前面的线程都执行完
-            Thread.yield();
+        for (Thread thread : list) {
+            thread.join();
+        }
         System.out.println(test.inc);
     }
 }
